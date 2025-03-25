@@ -6,14 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-
-	"github.com/julienschmidt/httprouter"
 )
 
-
-
-const
-(
+const (
 	// Version of the application
 	Version = "1.0.0"
 )
@@ -29,36 +24,26 @@ type App struct {
 	Logger *slog.Logger
 }
 
-func main() {	
+func main() {
 
 	var conf Config
 	flag.IntVar(&conf.Port, "port", 8080, "Port to listen on")
 	flag.Parse()
-	logger:=slog.New(slog.NewTextHandler(os.Stdout,nil))
-
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	app := App{
 		Config: conf,
 		Logger: logger,
 	}
 
-router:=httprouter.New()
-
-
-
-router.HandlerFunc(http.MethodGet, "/v1/health", func(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK done"))
-})
-
-
-	server:=http.Server{
-		Addr: fmt.Sprintf(":%d", app.Config.Port),
-		Handler: router,
+	server := http.Server{
+		Addr:    fmt.Sprintf(":%d", app.Config.Port),
+		Handler: app.routes(),
 	}
-	app.Logger.Info("Server started on port","PORT", app.Config.Port)
-	err:=server.ListenAndServe()
+
+	app.Logger.Info("Server started on port", "PORT", app.Config.Port)
+	err := server.ListenAndServe()
 	app.Logger.Error("Server stopped", "error", err.Error())
 	os.Exit(1)
-	
+
 }
